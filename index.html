@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>PI Simulator (Fake)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html,body {margin:0;height:100%;font-family:system-ui,Arial;}
+    #c {display:block;background:#111;width:100vw;height:70vh;}
+    #ui {padding:12px;}
+    .btn {padding:8px 12px;border:0;background:#4caf50;color:#fff;border-radius:8px;cursor:pointer}
+    #log {margin-top:8px;white-space:pre-wrap;font-size:14px}
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <div>Token recebido? <b id="tokStatus">não</b></div>
+  <button id="sendEvt" class="btn">Enviar evento de teste</button>
+  <div id="log"></div>
+</div>
+<script>
+function qs(name){return new URLSearchParams(location.search).get(name)}
+const token = qs("token");
+document.getElementById("tokStatus").textContent = token ? "sim" : "não";
+
+// >>>>>> TROQUE pela sua URL https (ngrok/cloudflared) <<<<<<
+const API_BASE = "https://XXXXX.ngrok-free.app";  // sem / no final
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+function resize(){ canvas.width = innerWidth; canvas.height = innerHeight*0.7; }
+addEventListener("resize", resize); resize();
+
+let t=0;
+function loop(){
+  t+=0.01;
+  ctx.fillStyle = "#111"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#0f0";
+  ctx.font = "24px monospace";
+  ctx.fillText("PI Simulator (Fake)", 20, 40);
+  ctx.fillText("Clique em 'Enviar evento' para testar a telemetria → Django", 20, 80);
+  requestAnimationFrame(loop);
+}
+loop();
+
+async function sendEvent(){
+  if(!token){ alert("sem token"); return; }
+  const payload = {
+    timestamp: new Date().toISOString(),
+    verb: "answered",
+    object: {type:"question", id:"q_fake_1"},
+    payload: {result:{success:true, score:0.9}, context:{topic:"peticao_inicial", attempt:1}}
+  };
+  try{
+    const r = await fetch(API_BASE + "/api/events", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+token
+      },
+      body: JSON.stringify(payload),
+      // credenciais não necessárias; endpoint já está csrf_exempt no MVP
+    });
+    const j = await r.json();
+    document.getElementById("log").textContent = "Resposta: "+JSON.stringify(j, null, 2);
+  }catch(e){
+    document.getElementById("log").textContent = "Erro: "+e;
+  }
+}
+document.getElementById("sendEvt").onclick = sendEvent;
+</script>
+</body>
+</html>
