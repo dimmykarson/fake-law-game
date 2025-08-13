@@ -24,8 +24,7 @@ function qs(name){return new URLSearchParams(location.search).get(name)}
 const token = qs("token");
 document.getElementById("tokStatus").textContent = token ? "sim" : "não";
 
-// >>>>>> TROQUE pela sua URL https (ngrok/cloudflared) <<<<<<
-const API_BASE = "https://XXXXX.ngrok-free.app";  // sem / no final
+const API_BASE = "https://2fdd95a646de.ngrok-free.app";  // sem / no final
 
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
